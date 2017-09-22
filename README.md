@@ -2,7 +2,7 @@
 
 Computational tools for identifying CRISPR targets and offtargets.
 
-# Preparing an offtarget index for the human genome
+# Preparing an off-target index for the human genome
 
 First, download hg38.fa.gz, the human genome.
 
