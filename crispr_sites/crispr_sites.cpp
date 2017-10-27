@@ -12,6 +12,8 @@
 #include <chrono>
 using namespace std;
 
+#define PROGRAM_NAME "crispr_sites"
+#define VERSION "1.0"
 
 // This program scans its input for forward k-3 mers ending with GG,
 // or reverse k-3 mers ending with CC.   It filters out guides that
@@ -241,7 +243,7 @@ long unixtime() {
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
-void scan_stdin() {
+void scan_stdin(bool output_counts) {
 
     init_encoding();
 
@@ -338,6 +340,9 @@ void scan_stdin() {
     // and then merging incrementally with c++ algorithm set_union,
     // rather than doing a huge sort at the end.   Parallelizing, esp on GPU,
     // could yield phenomenal speedup if we ever need to run this program fast.
+    //     Counting the multiplicity of guides is used for DASH guide
+    //     creation in dashdat -dynerman
+    
     cerr << "Sorting " << results.size() << " candidate guides." << endl;
     sort(results.begin(), results.end());
 
@@ -349,20 +354,29 @@ void scan_stdin() {
         }
         last = *it;
     }
-
+    
     cerr << "Outputting " << guides << " unique guides." << endl;
     last = 0;
     char obuf[k-1];
     obuf[k-2] = 0;
     obuf[k-3] = '\n';
-    for (auto it = results.begin();  it != results.end();  ++it) {
-        if (*it != last) {
-            decode(obuf, k-3, *it);
-            cout << obuf;
-        }
-        last = *it;
+
+    if (output_counts) {
+        obuf[k-3] = '\t';
     }
 
+    int32_t current_count = 0;
+    for (auto it = results.begin();  it != results.end();  ++it) {
+        ++current_count;
+        if (next(it) == results.end() || *next(it) != *it) {
+            decode(obuf, k-3, *it);
+            cout << obuf;
+            if (output_counts) {
+                cout << current_count << endl;
+            }
+            current_count = 0;
+        }
+    }
 }
 
 
@@ -451,10 +465,43 @@ void silent_tests() {
     }
 }
 
+void print_usage(char* program_name) {
+    cerr << endl << "read a FASTA file from stdin and output crispr guide 20-mers to stdout, e.g.," << endl << endl;
 
-int main(int argc, char** argv){
+    cerr << "\t cat input.fa | " << program_name << " >! output.txt" << endl;
+
+    cerr << endl << "Optional command line arguments:" << endl << endl;
+
+    cerr << program_name << " -[c|h]" << endl;
+
+    cerr << "\t -c \t Additionally output counts of how many times a 20-mer appears in the input" << endl;
+    cerr << "\t -h \t Print this help" << endl;
+}
+
+int main(int argc, char** argv) {
+    int opt;
+
+    bool output_counts = false;
+
+    cerr << PROGRAM_NAME << " " << VERSION << endl;
+    
+    while ((opt = getopt(argc,argv,"ch")) != -1) {
+        switch (opt) {
+        case 'c':
+            output_counts = true;
+            break;
+        case '?':
+        case 'h':
+            print_usage(argv[0]);
+            exit(0);
+            break;
+        }
+    }
+
+    cerr << argv[0] << " -h for usage" << endl;
+    
     init_encoding();
     silent_tests();
-    scan_stdin();
+    scan_stdin(output_counts);
     return 0;
 }
