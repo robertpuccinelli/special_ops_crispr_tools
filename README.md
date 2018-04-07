@@ -12,7 +12,7 @@ converted to forward direction.
 
     cd crispr_sites
 
-    g++ -O3 --std=c++11 -o crispr_sites crispr_sites.cpp
+    make
 
     gzip -dc generated_files/untracked/hg38.fa.gz | ./crispr_sites > human_targets.txt
 
@@ -42,3 +42,9 @@ The targets from your list that match against the human targets
 are listed in 
 
     batch_filter/off_targets.txt
+
+# crispr_sites unit tests
+
+    cd crispr_sites
+
+    make tests
