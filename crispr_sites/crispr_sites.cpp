@@ -23,7 +23,7 @@ using namespace std;
 // Usage:
 //
 //    g++ -O3 --std=c++11 -o crispr_sites crispr_sites.cpp
-//    gzip -dc ../../HUGE_DOWNLOADS/hg38.fa.gz | ./crispr_sites2 >! human_guides.txt
+//    gzip -dc ../../HUGE_DOWNLOADS/hg38.fa.gz | ./crispr_sites >! human_guides.txt
 //
 // Takes about 2 minutes on 2017 MacBook Pro.
 
@@ -327,8 +327,10 @@ void scan_stdin(bool output_reads) {
                 if (c == '>') {
                     chrm_comment = true;
                 } else {
-                    // compact
-                    window[len++] = c;
+                    // ignore gap characters in sequence
+		    if (c != '-') {
+			window[len++] = c;
+		    }
                 }
             }
         }

@@ -1,7 +1,7 @@
 PROGRAM_NAME=crispr_sites
 PROGRAM_VERSION := $(shell git describe --dirty --always --tags)
 
-CPPFLAGS=--std=c++11 -O3 
+CPPFLAGS=--std=c++11 -O3
 
 tests_all : main.o scan_stdin.o
 	g++ $(CPPFLAGS) -o tests_all main.o scan_stdin.o crispr_sites.o

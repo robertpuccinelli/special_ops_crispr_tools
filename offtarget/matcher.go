@@ -29,6 +29,7 @@ func basecode(c byte) twentymer {
 
 func encode(s string) twentymer {
 	if len(s) != 20 {
+		log.Printf("Query: %s\n", s)
 		panic("received target query for string with length != 20")
 	}
 	var code twentymer = 0

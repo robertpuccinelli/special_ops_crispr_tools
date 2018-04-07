@@ -17,4 +17,3 @@ tests:
 clean:
 	rm -f $(PROGRAM_NAME) crispr_sites.o
 	cd tests && make clean
-
