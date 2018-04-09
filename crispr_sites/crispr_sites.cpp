@@ -15,7 +15,7 @@ using namespace std;
 
 // This program scans its input for forward k-3 mers ending with GG,
 // or reverse k-3 mers ending with CC.   It filters out guides that
-// contain wildcards.  It supercedes crispr2_sites.py.
+// contain wildcards and retains duplicates.
 //
 // Usage:
 //
@@ -356,11 +356,8 @@ void scan_stdin() {
     obuf[k-2] = 0;
     obuf[k-3] = '\n';
     for (auto it = results.begin();  it != results.end();  ++it) {
-        if (*it != last) {
-            decode(obuf, k-3, *it);
-            cout << obuf;
-        }
-        last = *it;
+        decode(obuf, k-3, *it);
+        cout << obuf;
     }
 
 }
