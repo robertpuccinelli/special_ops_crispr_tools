@@ -45,6 +45,13 @@ func split_in_halves(t twentymer) (tenmer, tenmer) {
 	return tenmer(t & lower_half), tenmer((t >> 20) & lower_half)
 }
 
+func recombine_halves(c tenmer, ba tenmer) twentymer {
+	var t twentymer = 0
+	t = t | twentymer(c)
+	t <<= 20
+	return (t | twentymer(ba))
+}
+
 type OfftargetMatcher struct {
 	index [][]tenmer
 }
@@ -98,16 +105,17 @@ func count_bits(x tenmer) int {
 	return c
 }
 
-func find(haystack []tenmer, needle tenmer, max_differences int) bool {
+func find(haystack []tenmer, needle tenmer, max_differences int) (bool, tenmer) {
 	if max_differences == 0 {
 		// fast path for exact match
-		for _, hay := range haystack {
+		for idx, hay := range haystack {
 			if hay == needle {
-				return true
+				return true, haystack[idx]
 			}
 		}
-		return false
+		return false, 0
 	}
+
 	const mask_even_bits tenmer = 0x55555
 	const mask_odd_bits tenmer = mask_even_bits << 1
 	for _, hay := range haystack {
@@ -118,21 +126,24 @@ func find(haystack []tenmer, needle tenmer, max_differences int) bool {
 		// now the number of bits set to 1 in xor_any is equal to the number
 		// of positional differences in the tenmers hay and needle
 		if count_bits(xor_any) <= max_differences {
-			return true
+			return true, hay
 		}
 	}
-	return false
+	return false, 0
 }
 
-func (matcher *OfftargetMatcher) MatchForward(target string, lim_c5, lim_c10, lim_c20 int) bool {
+func (matcher *OfftargetMatcher) MatchForward(target string, lim_c5, lim_c10, lim_c20 int) (bool,twentymer) {
 	if lim_c5 != 5 || lim_c10 < 9 || lim_c10 > 10 || lim_c20 < lim_c10 || lim_c20 > 20 {
 		panic("For now we only support 5_9_x and 5_10_x")
 	}
+	var id tenmer = 0
+	var found bool = false
 	t := encode(target)
 	ba, c := split_in_halves(t)
 	max_diff := 20 - lim_c20
-	if find(matcher.index[ba], c, max_diff) {
-		return true
+	found, id = find(matcher.index[ba], c, max_diff)
+	if found {
+		return true, recombine_halves(id, ba)
 	}
 	if lim_c10 == 9 {
 		// generate every variant of b, total of 15
@@ -141,12 +152,13 @@ func (matcher *OfftargetMatcher) MatchForward(target string, lim_c5, lim_c10, li
 				mask := tenmer(3) << (2 * i)
 				ba_prime := (ba &^ mask) | (tenmer(j) << (2 * i))
 				if ba != ba_prime {
-					if find(matcher.index[ba_prime], c, max_diff-1) {
-						return true
+					found, id = find(matcher.index[ba_prime], c, max_diff-1)
+						if found {
+							return true, recombine_halves(id, ba_prime)
+						}
 					}
 				}
 			}
 		}
+		return false, 0
 	}
-	return false
-}

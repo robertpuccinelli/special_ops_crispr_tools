@@ -66,9 +66,9 @@ func main() {
 		lim_c20, _ := strconv.Atoi(limits[2])
 
 		for _, t := range targets {
-			b := m.MatchForward(t, lim_c5, lim_c10, lim_c20)
+			b, id := m.MatchForward(t, lim_c5, lim_c10, lim_c20)
 			// logging here is too expensive
-			// log.Printf("limits: %d %d %d targets %#v %t\n", lim_c5, lim_c10, lim_c20, t, b)
+			log.Printf("limits: %d %d %d targets %#v %t %#v\n", lim_c5, lim_c10, lim_c20, t, b, id)
 			fmt.Fprintf(w, "%s %t\n", t, b)
 		}
 
