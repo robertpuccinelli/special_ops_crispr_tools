@@ -69,7 +69,7 @@ func main() {
 			b, id := m.MatchForward(t, lim_c5, lim_c10, lim_c20)
 			// logging here is too expensive
 			log.Printf("limits: %d %d %d targets %#v %t %#v\n", lim_c5, lim_c10, lim_c20, t, b, id)
-			fmt.Fprintf(w, "%s %t\n", t, b)
+			fmt.Fprintf(w, "%s %t %s\n", t, b, id)
 		}
 
 	})
