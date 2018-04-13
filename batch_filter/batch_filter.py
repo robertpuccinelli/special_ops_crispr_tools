@@ -17,7 +17,7 @@ output_path = "off_targets.txt"
 # any offtargets in that radius.  There are two radii of interest.
 #
 offtarget_proximity = {
-    "far":  "5_9_18",
+    "far":  "5_9_10",
     "near":  "5_9_19"
 }
 assert offtarget_proximity["far"] < offtarget_proximity["near"]
@@ -122,7 +122,7 @@ def read_all_targets(input_path):
 def main():
     try:
         print("Poking offtarget server.  Timeout 30 seconds.")
-        fetch_with_retries(["ACGT" * 5], 5, 9, 18, max_attempts=5, timeout=30)
+        fetch_with_retries(["ACGT" * 5], 5, 9, 10, max_attempts=5, timeout=30)
         print("Offtarget server is alive.")
     except:
         traceback.print_exc()

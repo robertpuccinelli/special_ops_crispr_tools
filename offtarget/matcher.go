@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"log"
+	"strings"
 )
 
 type twentymer uint64
@@ -23,6 +24,20 @@ func basecode(c byte) twentymer {
 	return 0xFFFFFFFFFF
 }
 
+func codebase(c twentymer) string {
+	switch c {
+	case 0:
+		return string('A')
+	case 3:
+		return string('T')
+	case 1:
+		return string('C')
+	case 2:
+		return string('G')
+	}
+	return string('N')
+}
+
 // In this encoding, the LSBs of the code word correspoind to
 // the most signifficant bases in the forward 20mer (i.e.,
 // the bases nearest the NGG motif).
@@ -39,17 +54,30 @@ func encode(s string) twentymer {
 	return code
 }
 
+func decode(t twentymer) string {
+	const mask twentymer = 3
+	var s string = ""
+	var temp string = ""
+	for i := 0; i < 20; i++ {
+		temp = strings.Replace(temp, temp, codebase(t & mask),-1)
+		t >>= 2
+		s = strings.Join([]string{temp,s},"")
+	}
+	return s
+}
+
 func split_in_halves(t twentymer) (tenmer, tenmer) {
 	const lsb twentymer = 1
 	const lower_half twentymer = (lsb << 20) - lsb
 	return tenmer(t & lower_half), tenmer((t >> 20) & lower_half)
 }
 
-func recombine_halves(c tenmer, ba tenmer) twentymer {
+func recombine_halves(c tenmer, ba tenmer) string {
 	var t twentymer = 0
 	t = t | twentymer(c)
 	t <<= 20
-	return (t | twentymer(ba))
+	t = (t | twentymer(ba))
+	return decode(t)
 }
 
 type OfftargetMatcher struct {
@@ -132,7 +160,7 @@ func find(haystack []tenmer, needle tenmer, max_differences int) (bool, tenmer) 
 	return false, 0
 }
 
-func (matcher *OfftargetMatcher) MatchForward(target string, lim_c5, lim_c10, lim_c20 int) (bool,twentymer) {
+func (matcher *OfftargetMatcher) MatchForward(target string, lim_c5, lim_c10, lim_c20 int) (bool, string) {
 	if lim_c5 != 5 || lim_c10 < 9 || lim_c10 > 10 || lim_c20 < lim_c10 || lim_c20 > 20 {
 		panic("For now we only support 5_9_x and 5_10_x")
 	}
@@ -160,5 +188,5 @@ func (matcher *OfftargetMatcher) MatchForward(target string, lim_c5, lim_c10, li
 				}
 			}
 		}
-		return false, 0
+		return false, string("NULL")
 	}
